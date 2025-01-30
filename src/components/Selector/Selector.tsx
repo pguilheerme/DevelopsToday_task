@@ -23,10 +23,9 @@ export default function VehicleSelector() {
     async function fetchMakes() {
       try {
         const response = await fetch(
-          "https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json"
+          `${process.env.NEXT_PUBLIC_API_URL}/GetMakesForVehicleType/car?format=json`
         );
         const data = await response.json();
-        console.log(data);
         setMakes(data.Results);
       } catch (error) {
         console.error("Error fetching vehicle makes:", error);
@@ -37,11 +36,11 @@ export default function VehicleSelector() {
   }, []);
 
   return (
-    <div className="flex flex-col p-4 space-y-4">
-      <label className="block">
+    <div className="flex flex-col items-center p-6 space-y-6 lg:bg-gray-100 md:bg-gray-100 rounded-lg md:shadow-md lg:shadow-md w-full max-w-md mx-auto">
+      <label className="w-full text-lg font-medium text-gray-700">
         Select Make:
         <select
-          className="block w-full p-2 border rounded-md"
+          className="mt-2 block w-full p-3 border border-gray-300 rounded-md bg-white shadow-sm focus:ring-2 focus:ring-gray-500 focus:outline-none"
           value={selectedMake ? selectedMake.id.toString() : ""}
           onChange={(e) => {
             const selectedOption = makes.find(
@@ -64,10 +63,10 @@ export default function VehicleSelector() {
         </select>
       </label>
 
-      <label className="block">
+      <label className="w-full text-lg font-medium text-gray-700">
         Select Year:
         <select
-          className="block w-full p-2 border rounded-md"
+          className="mt-2 block w-full p-3 border border-gray-300 rounded-md bg-white shadow-sm focus:ring-2 focus:ring-gray-500 focus:outline-none"
           value={selectedYear}
           onChange={(e) => setSelectedYear(e.target.value)}
         >
@@ -81,15 +80,21 @@ export default function VehicleSelector() {
       </label>
 
       {selectedMake && selectedYear && (
-        <p className="mt-4 font-semibold">
-          Selected: {selectedMake.name} - {selectedYear}
+        <p className="mt-4 text-lg font-semibold text-gray-800">
+          Selected:{" "}
+          <span className="text-gray-600">
+            {selectedMake.name} - {selectedYear}
+          </span>
         </p>
       )}
+
       <Link href={`/result/${makeId}/${selectedYear}`} passHref>
         <button
           type="button"
           disabled={!isNextButtonEnabled}
-          className="flex justify-center items-center w-full px-10 py-2 bg-black text-white text-lg rounded-full disabled:opacity-50"
+          className="w-full px-10 py-3 bg-black text-white text-lg rounded-full shadow-md 
+            disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300
+            hover:bg-gray-800 hover:shadow-lg"
         >
           Next
         </button>

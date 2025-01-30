@@ -1,68 +1,39 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-"use client";
-import Loading from "@/components/Loading/Loading";
-import Link from "next/link";
-import { useParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import CarItem from "@/components/CarItem/CarItem";
+import { notFound } from "next/navigation";
 
-type MakeProps = {
-  Make_ID: number;
-  Make_Name: string;
-  Model_ID: number;
-  Model_Name: string;
-};
+export async function generateStaticParams() {
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/GetMakesForVehicleType/car?format=json`
+  );
+  const data = await res.json();
 
-export default function ResultPage() {
-  const { makeId, year } = useParams();
-  const [make, setMake] = useState<MakeProps[] | null>(null);
+  if (!data.Results) return [];
 
-  useEffect(() => {
-    async function fetchMakes() {
-      if (makeId && year) {
-        console.log("MakeId: ", makeId);
-        console.log("year: ", year);
-        try {
-          const response = await fetch(
-            `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMakeIdYear/makeId/${makeId}/modelyear/${year}?format=json`
-          );
-          const data = await response.json();
-          console.log(data);
-          setMake(data.Results);
-        } catch (error) {
-          console.error("Error fetching vehicle makes:", error);
-        }
-      }
-    }
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2014 }, (_, i) => 2015 + i);
 
-    fetchMakes();
-  }, []);
+  return data.Results.flatMap((make: { MakeId: number; MakeName: string }) =>
+    years.map((year) => ({
+      makeId: make.MakeId.toString(),
+      year: year.toString(),
+    }))
+  );
+}
+
+export default async function ResultPage({
+  params,
+}: {
+  params: { makeId: number; year: string };
+}) {
+  const { makeId, year } = await params;
+
+  if (!params || !makeId || !year) {
+    return notFound();
+  }
 
   return (
-    <Suspense fallback={<Loading />}>
-      <div className="w-full lg:h-screen flex flex-col justify-center items-center py-32">
-        <div className="lg:w-[60%] w-[90%] flex flex-col justify-center items-center">
-          <h1 className="text-4xl">Results</h1>
-          <div className="h-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-            {make?.map((make) => (
-              <div
-                key={make.Model_ID}
-                className="w-52 h-52 flex flex-col justify-center items-center bg-gray-200 rounded-xl shadow-sm gap-3"
-              >
-                <span className="text-lg font-bold">
-                  Make: {make?.Make_Name}
-                </span>
-                <span className="text-sm">Model: {make?.Model_Name}</span>
-              </div>
-            ))}
-          </div>
-          <Link
-            className="w-full flex justify-center items-center px-10 py-2 bg-black text-white text-lg rounded-full"
-            href={"/"}
-          >
-            Go back
-          </Link>
-        </div>
-      </div>
-    </Suspense>
+    <div className="w-full min-h-screen flex flex-col justify-center items-center py-16 bg-gray-100">
+      <CarItem />
+    </div>
   );
 }
